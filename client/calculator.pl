@@ -6,7 +6,7 @@ use strict;
 #  Assuming that 'Calculator.pm' has been installed server side.
 #
 package Calculator;
-use base qw( SOAP::AutoInvoke );
+use base qw( SOAP::Transport::HTTP::AutoInvoke::Client );
 
 
 package main;

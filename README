@@ -14,13 +14,13 @@ Overview
 
 SOAP-AutoInvoke (previously SOAP-Autoload) was my learning exercise for
 getting familiar with SOAP.  The objective of the "SOAP::AutoInvoke" and
-"SOAP::Transport::HTTP::AutoInvoke" classes are to allow you to use Perl
+"SOAP::Transport::HTTP::AutoInvoke::" classes are to allow you to use Perl
 classes as you normal would  and not think (much) about the classes actually
 being located elsewhere.
 
 SOAP::Autoloader uses Autoloader to setup the remote method call.  Arguments
 are passed into the SOAP struct with the simple names "ARG0", "ARG1", ...
-"ARGn" that SOAP::Transport::HTTP::AutoInvoke knows to look for and unpack.
+"ARGn" that SOAP::Transport::HTTP::AutoInvoke::Server knows to look for and unpack.
 SOAP::Transport::HTTP::AutoInvoke returns the response from the method call
 in the same way.
 
@@ -28,8 +28,9 @@ The actual details of setting up the call are hidden from you and you would
 use the remote class in the usual way (as if it were local).
 
 The approach works well with simple data types but is limited to what
-the SOAP package can serialize.  SOAP::AutoInvoke will try and send an
-array of data using Data::Dumper which is also a required package.
+the SOAP package can serialize.  SOAP::Transport::HTTP::AutoInvoke::Client
+will try and send an array of data using Data::Dumper which is also a required
+package.
 
 The remote class does NOT need any special modification to work with SOAP::
 AutoInvoke -- unless you require the passing of data types that SOAP can
@@ -60,16 +61,16 @@ following:
 -------------------------------8<------------------------------------------
 package Apache::SoapServer;
 use strict;
-use SOAP::Transport::HTTP::Apache;      # must be the provided Apache.pm!
-use SOAP::Transport::HTTP::AutoInvoke;  # import "auto_invoke" dispatcher
+use SOAP::Transport::HTTP::Apache;             # must be the provided Apache.pm!
+use SOAP::Transport::HTTP::AutoInvoke::Server; # import "auto_invoke" dispatcher
 
 sub handler {
         my $safe_classes   ={
-                ClassA     => undef,          # uses default   dispatcher
-                ClassB     => undef,          # uses default   dispatcher
-                Calculator => \&auto_invoke,  # uses specified dispatcher
-                ClassC     => undef,          # uses default   dispatcher
-                ClassD     => \&myDispatcher, # uses specified dispatcher
+                ClassA     => undef,           # uses default   dispatcher
+                ClassB     => undef,           # uses default   dispatcher
+                Calculator => \&auto_invoke,   # uses specified dispatcher
+                ClassC     => undef,           # uses default   dispatcher
+                ClassD     => \&myDispatcher,  # uses specified dispatcher
         };
         SOAP::Transport::HTTP::Apache->handler($safe_classes);
 }
@@ -82,7 +83,7 @@ __END__
 The demonstration scripts client/calculator.pl demonstrates the method call to
 the server and client/hello-calculator.pl demonstrates the method call
 where by the remote "new" method is specified and arguments passed.  Check
-your Apache error log files to see that "hello" method is begin called
+your Apache error log files to see that "hello" method is being called
 instead of "new".
 
 

@@ -1,26 +1,26 @@
-package SOAP::AutoInvoke;
+package SOAP::Transport::HTTP::AutoInvoke::Client;
 
 
 BEGIN
 {
 
-use strict;
-use vars qw ( $VERSION $AUTOLOAD $DEFAULT_HOST $DEFAULT_PORT $DEFAULT_ENDPOINT $DEFAULT_METHOD_URI  );
+	use strict;
+	use vars qw ( $VERSION $AUTOLOAD $DEFAULT_HOST $DEFAULT_PORT $DEFAULT_ENDPOINT $DEFAULT_METHOD_URI  );
 
-$VERSION = '0.20';
+	$VERSION = '0.25';
 
-require 5.000;
+	require 5.000;
 
-use SOAP::EnvelopeMaker;
-use SOAP::Struct;
-use SOAP::Transport::HTTP::Client;
-use SOAP::Parser;
-use Data::Dumper;
+	use SOAP::EnvelopeMaker;
+	use SOAP::Struct;
+	use SOAP::Transport::HTTP::Client;
+	use SOAP::Parser;
+	use Data::Dumper;
 
-$DEFAULT_HOST       = "localhost";
-$DEFAULT_PORT       = 80;
-$DEFAULT_ENDPOINT   = "/soap?class=";
-$DEFAULT_METHOD_URI = "urn:com-name-your";
+	$DEFAULT_HOST       = "localhost";
+	$DEFAULT_PORT       = 80;
+	$DEFAULT_ENDPOINT   = "/soap?class=";
+	$DEFAULT_METHOD_URI = "urn:com-name-your";
 
 }
 
@@ -64,87 +64,34 @@ my $self  = {};
 
 
 
-sub setHost
+sub _soap_get_set_args
 {
-	$_[0]->{_soap_host} = $_[1];
+my ($self, $method) = (shift,shift);
+
+
+	$method =~ s/_([gs]et)//;
+	my $get_set = $1;
+
+	if ( $method =~ /_soap_host$/
+		 || $method =~ /_soap_port$/
+		 || $method =~ /_soap_endpoint$/
+		 || $method =~ /_soap_method_uri$/
+		 || $method =~ /_soap_new_method$/ )
+	{
+		print "GETSET = $get_set\n";
+		return ( $self->{$method} ) if ( $get_set eq "get" );
+
+		$self->{$method} = shift;
+	}
+	else {
+		warn ( "Skipping get/set of unknown parameter: $method" );
+	}
+
 }
 
 
 
-sub setPort
-{
-	$_[0]->{_soap_port} = $_[1];
-}
-
-
-
-sub setEndPoint
-{
-	$_[0]->{_soap_endpoint} .= $_[1];
-}
-
-
-
-sub setMethodURI
-{
-	$_[0]->{_soap_method_uri} .= $_[1];
-}
-
-
-
-sub setNewMethod
-{
-	$_[0]->{_soap_new_method} .= $_[1];
-}
-
-
-
-sub getHost
-{
-	$_[0]->{_soap_gethost};
-}
-
-
-
-sub getPort
-{
-	$_[0]->{_soap_getport};
-}
-
-
-
-sub getEndPoint
-{
-	$_[0]->{_soap_endpoint};
-}
-
-
-
-sub getMethodURI
-{
-	$_[0]->{_soap_method_uri};
-}
-
-
-
-sub getNewMethod
-{
-	$_[0]->{_soap_new_method};
-}
-
-
-
-sub getNewArgs
-{
-	(wantarray)
-	  ?  @{$self->{_soap_new_args}}
-      :  $self->{_soap_new_args}
-	;
-}
-
-
-
-sub setNewArgs
+sub _soap_set_new_args
 {
 	$self->{_soap_new_args} = ();
 
@@ -157,7 +104,17 @@ sub setNewArgs
 
 
 
-sub deliverRequest
+sub _soap_get_new_args
+{
+	(wantarray)
+	  ?  @{$self->{_soap_new_args}}
+      :  $self->{_soap_new_args}
+	;
+}
+
+
+
+sub _soap_deliver_request
 {
 my ($self, $method_name) = (shift, shift);
 
@@ -170,7 +127,7 @@ my ($self, $method_name) = (shift, shift);
 	foreach (@_) {
 		if ( ref ($_) eq "ARRAY" ) {
 			$_ = Dumper ( $_ );
-			s/^\$VAR1 = /array::/g;
+			s/^\$VAR1 = /_soap_array::/g;
 		}
 		$ARGV{"ARG$arg"} = $_;
 		$arg++;	
@@ -180,7 +137,7 @@ my ($self, $method_name) = (shift, shift);
 		foreach (@{$self->{_soap_new_args}}) {
 			if ( ref ($_) eq "ARRAY" ) {
 				$_ = Dumper ( $_ );
-				s/^\$VAR1 = /array::/g;
+				s/^\$VAR1 = /_soap_array::/g;
 			}
 			$ARGV{"NewARG$arg"} = $_;
 			$arg++;	
@@ -236,8 +193,8 @@ my ($self, $method_name) = (shift, shift);
 	$arg = 0;
 	@_ = ();
 	while ( $_ = $body->{"ARG$arg"} ) {
-		if ( /^array::/ ) {
-			s/^array:://;
+		if ( /^_soap_array::/ ) {
+			s/^_soap_array:://;
 			$_ = eval ( $_ );
 		}
 		push ( @_, $_ );
@@ -262,12 +219,17 @@ sub AUTOLOAD
         my($method) = ($AUTOLOAD =~ /::([^:]+)$/);
         return unless ($method);
 
-        $self->deliverRequest ( $method, @_ );
+		return $self->_soap_get_set_args ( $method, @_ )
+			if ( $method =~ "^_soap_" );
+
+
+        $self->_soap_deliver_request ( $method, @_ );
 }
 
 
 
 1;
+
 __END__
 
 
@@ -327,7 +289,7 @@ from the defaults.
               );
 
 It is advisable to set the package defaults at installation time in the
-SOAP/AutoInvoke.pm (this) file.  The variables may also be reset after
+SOAP/Transport/HTTP/AutoInvoke/Client.pm (this) file.  The variables may also be reset after
 instantiation with the 'set' methods.
 
 The '_soap_' variable is relevant only to the local instantiation of "MyClass".
@@ -365,51 +327,51 @@ To not call any new method remotely:
 
 =over 4
 
-=item B<getHost>:
+=item B<_soap_get_host>:
 
 returns the contents of $class->{_soap_host}.
 
-=item B<setHost>:
+=item B<_soap_set_host>:
 
 sets the contents of $class->{_soap_host}.
 
-=item B<getPort>:
+=item B<_soap_get_port>:
 
 returns the contents of $class->{_soap_port}.
 
-=item B<setPort>:
+=item B<_soap_set_port>:
 
 sets the contents of $class->{_soap_port}.
 
-=item B<getEndPoint>:
+=item B<_soap_get_endpoint>:
 
 returns the contents of $class->{_soap_endpoint}.
 
-=item B<setEndPoint>:
+=item B<_soap_set_endpoint>:
 
 sets the contents of $class->{_soap_endpoint}.
 
-=item B<getMethodURI>:
+=item B<_soap_get_method_uri>:
 
 returns the contents of $class->{_soap_method_uri}.
 
-=item B<setMethodURI>:
+=item B<_soap_set_method_uri>:
 
 sets the contents of $class->{_soap_method_uri}.
 
-=item B<getNewArgs>:
+=item B<_soap_get_new_args>:
 
 returns the contents of $class->{_soap_new_args}.
 
-=item B<setNewArgs>:
+=item B<_soap_set_new_args>:
 
 sets the contents of $class->{_soap_new_args}.
 
-=item B<getNewMethod>:
+=item B<_soap_get_new_method>:
 
 returns the contents of $class->{_soap_new_method}.
 
-=item B<setNewMethod>:
+=item B<_soap_set_new_method>:
 
 sets the contents of $class->{_soap_new_method}.  The default is "new".
 

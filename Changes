@@ -1,6 +1,11 @@
 Revision history for Perl extension SOAP::AutoInvoke.
 
 
+Thu Oct 26 18:47:28 EDT 2000
+	- AutoInvoke classes for ActiveWorks transport is added.
+	- Classes are renamed "Client" and "Server" and moved into
+	- transport specific subdirectories.
+
 Thu Oct 19 16:52:43 EDT 2000
 	- package renamed "SOAP::AutoInvoke"
 	- can call a "new" method remotely with args.
