@@ -1,0 +1,10 @@
+Changes
+MANIFEST
+Makefile.PL
+README
+client/calculator.pl
+client/hello-calculator.pl
+server/Calculator.pm
+SOAP/AutoInvoke.pm
+SOAP/Transport/HTTP/AutoInvoke.pm
+SOAP/Transport/HTTP/Apache.pm

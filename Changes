@@ -1,0 +1,13 @@
+Revision history for Perl extension SOAP::AutoInvoke.
+
+
+Thu Oct 19 16:52:43 EDT 2000
+	- package renamed "SOAP::AutoInvoke"
+	- can call a "new" method remotely with args.
+	- uses the "optional_dispatcher" feature of SOAP::Transport::HTTP::Apache.
+	- SOAP::Autounload moved to SOAP::Transport::HTTP::AutoInvoke since
+      it is HTTP specific.
+
+Fri Oct 13 10:16:17 EDT 2000
+
+	- initial release.
